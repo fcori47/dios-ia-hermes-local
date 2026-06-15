@@ -48,7 +48,7 @@ echo ""
 # 2. Verificar que el modelo esté descargado
 # --------------------------------------------------------------------------
 echo "[ 2/4 ] Verificando modelo '${HERMES_MODEL}'..."
-if echo "$TAGS" | grep -Fq "\"${HERMES_MODEL}\"" 2>/dev/null; then
+if echo "$TAGS" | grep -Fq "\"${HERMES_MODEL}\"" 2>/dev/null || echo "$TAGS" | grep -Fq "\"${HERMES_MODEL}:" 2>/dev/null; then
     echo "       Modelo disponible."
 else
     echo ""
