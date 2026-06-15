@@ -1,0 +1,131 @@
+# =============================================================================
+# Hermes Agent + Ollama — 100% local, con Docker
+# Funciona en Windows, macOS y Linux.
+#
+# Arranque recomendado (detecta SO y GPU solo):
+#     macOS / Linux:   ./scripts/start.sh
+#     Windows:         .\scripts\start.ps1
+#
+# Dos modos de funcionamiento:
+#   - "bundled"  -> Ollama corre DENTRO de Docker (Windows / Linux).
+#                   Usa GPU NVIDIA si hay (ver docker-compose.gpu.yml), sino CPU.
+#   - "host"     -> Ollama corre NATIVO en el host (recomendado en macOS, porque
+#                   Docker no puede usar la GPU Metal de Apple). Hermes le pega a
+#                   http://host.docker.internal:11434/v1
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Ollama — servidor del modelo local (solo modo "bundled").
+  # Vive bajo el perfil "bundled" para que NO arranque en modo host (macOS).
+  # ---------------------------------------------------------------------------
+  ollama:
+    profiles: ["bundled"]
+    image: ollama/ollama:latest
+    container_name: hermes-ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-24h}
+      - OLLAMA_NUM_PARALLEL=${OLLAMA_NUM_PARALLEL:-1}
+      - OLLAMA_MAX_LOADED_MODELS=${OLLAMA_MAX_LOADED_MODELS:-1}
+    # Puerto de Ollama expuesto al host SOLO para debug. Comentado por defecto:
+    # si ya tenés Ollama nativo escuchando en 127.0.0.1:11434 (autostart en Windows /
+    # servicio systemd en Linux) este publish chocaría con
+    # "Bind for 127.0.0.1:11434 failed: port is already allocated".
+    # Hermes alcanza a Ollama por la red interna de Docker (http://ollama:11434/v1),
+    # no por este puerto. Para debuggear, descomentá (y poné OLLAMA_HOST_PORT a un
+    # puerto libre en .env si 11434 está ocupado):
+    # ports:
+    #   - "127.0.0.1:${OLLAMA_HOST_PORT:-11434}:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # pull-model — descarga OLLAMA_MODEL al volumen persistente (solo "bundled").
+  # One-shot:  docker compose --profile bundled run --rm pull-model
+  # ---------------------------------------------------------------------------
+  pull-model:
+    profiles: ["bundled"]
+    image: ollama/ollama:latest
+    container_name: hermes-pull-model
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - OLLAMA_HOST=ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen3:8b}
+    entrypoint: ["/bin/sh", "-c"]
+    command: ['echo ">>> Descargando modelo: $${OLLAMA_MODEL} (puede tardar varios minutos)..." && ollama pull "$${OLLAMA_MODEL}" && echo ">>> Listo."']
+    restart: "no"
+
+  # ---------------------------------------------------------------------------
+  # hermes — el agente. Apunta al endpoint OpenAI-compatible de Ollama.
+  # Uso normal:  docker compose run --rm hermes
+  # ---------------------------------------------------------------------------
+  hermes:
+    build:
+      context: .
+      dockerfile: Dockerfile.hermes
+    image: hermes-agent:local
+    container_name: hermes-agent
+    stdin_open: true
+    tty: true
+    environment:
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-http://ollama:11434/v1}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-ollama}
+      - HERMES_HOME=/hermes-config
+      - HERMES_MODEL=${OLLAMA_MODEL:-qwen3:8b}
+      - HERMES_OAUTH_PORT=${HERMES_OAUTH_PORT:-8080}
+    ports:
+      - "127.0.0.1:${HERMES_OAUTH_PORT:-8080}:8080"
+    extra_hosts:
+      # Permite alcanzar Ollama nativo del host (modo "host" en macOS/Linux).
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - hermes-config:/hermes-config
+      # Descomentar para darle a Hermes acceso a una carpeta del host:
+      # - ${WORKSPACE_PATH:-./workspace}:/workspace
+    working_dir: /workspace
+    command: ["hermes chat"]
+
+  # ---------------------------------------------------------------------------
+  # hermes-setup — wizard de primer arranque (OAuth + selección de modelo).
+  # Uso:  docker compose run --rm hermes-setup
+  # ---------------------------------------------------------------------------
+  hermes-setup:
+    build:
+      context: .
+      dockerfile: Dockerfile.hermes
+    image: hermes-agent:local
+    container_name: hermes-setup
+    stdin_open: true
+    tty: true
+    environment:
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-http://ollama:11434/v1}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-ollama}
+      - HERMES_HOME=/hermes-config
+      - HERMES_MODEL=${OLLAMA_MODEL:-qwen3:8b}
+      - HERMES_OAUTH_PORT=${HERMES_OAUTH_PORT:-8080}
+    ports:
+      - "127.0.0.1:${HERMES_OAUTH_PORT:-8080}:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - hermes-config:/hermes-config
+      - ./scripts:/scripts:ro
+    working_dir: /workspace
+    entrypoint: ["/bin/bash"]
+    command: ["/scripts/setup-hermes.sh"]
+
+volumes:
+  ollama-models:
+    name: hermes_ollama_models
+  hermes-config:
+    name: hermes_agent_config

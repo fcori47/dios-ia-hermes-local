@@ -1,0 +1,39 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    bash \
+    ca-certificates \
+    git \
+    locales \
+    less \
+    vim-tiny \
+    dnsutils \
+    iputils-ping \
+    xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Instalar Hermes como root para que el binario quede en /usr/local/bin
+RUN curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+
+COPY scripts/ /scripts/
+RUN chmod +x /scripts/*.sh
+
+# HERMES_HOME apunta al volumen persistente (sobreescrito en docker-compose.yml)
+ENV HERMES_HOME=/hermes-config
+ENV PATH="/root/.hermes/bin:/usr/local/bin:${PATH}"
+
+RUN mkdir -p /workspace
+
+WORKDIR /workspace
+
+ENTRYPOINT ["/bin/bash", "-c"]
+CMD ["hermes chat"]

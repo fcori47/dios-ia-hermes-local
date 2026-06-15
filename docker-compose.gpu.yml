@@ -1,0 +1,24 @@
+# =============================================================================
+# Override para GPU NVIDIA (modo "bundled").
+#   - Windows: Docker Desktop con backend WSL2 + drivers NVIDIA.
+#   - Linux:   nvidia-container-toolkit instalado.
+#
+# Los scripts start.sh / start.ps1 agregan este archivo automáticamente si
+# detectan una GPU NVIDIA. A mano:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml \
+#     --profile bundled up -d ollama
+#
+# En macOS NO se usa: Docker no puede acceder a la GPU Metal de Apple, por eso
+# en Mac Ollama corre nativo en el host (modo "host"). Ver README.
+# =============================================================================
+
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

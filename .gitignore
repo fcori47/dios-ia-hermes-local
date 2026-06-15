@@ -1,0 +1,18 @@
+# Configuración local con secretos / valores propios
+.env
+
+# Carpeta de trabajo opcional montada en el contenedor
+workspace/
+
+# Editor / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Config local de Claude Code
+.claude/
+
+# Logs
+*.log

@@ -1,0 +1,10 @@
+.git
+.gitignore
+workspace/
+.env
+.claude/
+*.log
+.DS_Store
+Thumbs.db
+README.md
+docs/
