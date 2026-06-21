@@ -145,6 +145,8 @@ Hacé esto **una sola vez**. Elegí tu sistema operativo 👇
 - **Abrí Docker Desktop.** La primera vez te pide aceptar los términos (**Accept**). Si aparece una pantalla para iniciar sesión o crear cuenta, **NO hace falta**: tocá **"Continue without signing in"** (o **Skip**).
 - Esperá a que el ícono de la ballena 🐳 deje de moverse y diga **"Running"** (ese cartelito está **abajo a la izquierda**, es chiquito; la ballena también queda en la **bandeja del sistema**, al lado del reloj, a veces detrás de la flechita **^**). **Dejá Docker Desktop abierto.**
 
+> 🎥 **¿Nunca instalaste Docker o no te arranca en Windows?** Guía en video, paso a paso, para dejarlo funcionando: **https://www.youtube.com/watch?v=ZyBBv1JmnWQ**
+
 **2. Git** — para descargar el proyecto.
 - Descargalo: **https://git-scm.com/download/win** (se instala solo con las opciones por defecto).
 - *(Si no querés instalar Git, en el Paso 1 te muestro cómo bajarlo como ZIP.)*
@@ -467,7 +469,7 @@ docker rmi hermes-agent:local ollama/ollama:latest ubuntu:22.04
 
 **"Docker no está corriendo"** → Abrí **Docker Desktop** y esperá a que diga *Running*. Después reintentá.
 
-**Windows: Docker no arranca / pide WSL 2 o "WSL kernel version too low"** → Reiniciá la PC una vez. Si sigue, abrí PowerShell y corré `wsl --update`, después reabrí Docker Desktop.
+**Windows: Docker no arranca / pide WSL 2 o "WSL kernel version too low"** → Reiniciá la PC una vez. Si sigue, abrí PowerShell y corré `wsl --update`, después reabrí Docker Desktop. ¿Nunca instalaste Docker o no te arranca? Guía en video paso a paso: **https://www.youtube.com/watch?v=ZyBBv1JmnWQ**
 
 **Windows: `start.ps1 cannot be loaded because running scripts is disabled`** → Usá siempre el comando completo: `powershell -ExecutionPolicy Bypass -File .\scripts\start.ps1` (no cambia nada en tu PC). Si bajaste el ZIP y dice *"is not digitally signed"*, desbloquealo: `Unblock-File .\scripts\start.ps1`.
 
