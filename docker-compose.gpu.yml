@@ -3,8 +3,7 @@
 #   - Windows: Docker Desktop con backend WSL2 + drivers NVIDIA.
 #   - Linux:   nvidia-container-toolkit instalado.
 #
-# Los scripts start.sh / start.ps1 agregan este archivo automáticamente si
-# detectan una GPU NVIDIA. A mano:
+# Agregá este override con -f SOLO si tenés GPU NVIDIA usable:
 #
 #   docker compose -f docker-compose.yml -f docker-compose.gpu.yml \
 #     --profile bundled up -d ollama

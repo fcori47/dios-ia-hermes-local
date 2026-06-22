@@ -24,9 +24,6 @@ ENV LC_ALL=en_US.UTF-8
 # Instalar Hermes como root para que el binario quede en /usr/local/bin
 RUN curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
 
-COPY scripts/ /scripts/
-RUN chmod +x /scripts/*.sh
-
 # HERMES_HOME apunta al volumen persistente (sobreescrito en docker-compose.yml)
 ENV HERMES_HOME=/hermes-config
 ENV PATH="/root/.hermes/bin:/usr/local/bin:${PATH}"

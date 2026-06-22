@@ -1,10 +1,2 @@
-# Forzar LF en los scripts de shell para que funcionen dentro de los
-# contenedores Linux sin importar el core.autocrlf del que clona
-# (en Windows el default es true -> CRLF rompería setup-hermes.sh).
-*.sh text eol=lf
-
-# Los scripts de PowerShell quedan con CRLF (nativo de Windows).
-*.ps1 text eol=crlf
-
-# Normalizar el resto del texto a LF.
+# Normalizar el texto a LF (consistente entre Windows / macOS / Linux).
 * text=auto eol=lf

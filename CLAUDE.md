@@ -10,7 +10,7 @@ La guía operativa para agentes de este repo es **[AGENTS.md](./AGENTS.md)** —
   1. Instalar **Docker Desktop** y (en Mac) la app de **Ollama** — son instaladores gráficos.
   2. El **inicio de sesión (OAuth)** en el navegador con la cuenta de Nous Research.
   3. El **asistente interactivo** (apretar ENTER + elegir el modelo con las flechas).
-- `start.sh` / `start.ps1` y `chat.sh` / `chat.ps1` **son interactivos** → los corre el humano en su terminal, no vos en un shell capturado. Vos preparás el terreno y destrabás.
+- El **login** (`docker compose run --rm --service-ports hermes "hermes setup --portal"`), el **selector de modelo** (`hermes model`) y el **chat** (`docker compose run --rm hermes`) **son interactivos** → los corre el humano en su terminal, no vos en un shell capturado. Vos hacés la preparación no interactiva (levantar Ollama, bajar el modelo, `docker compose build hermes`, tocar `.env`) y destrabás.
 
 ## Honestidad (regla dura)
 
