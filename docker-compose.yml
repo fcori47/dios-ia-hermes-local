@@ -1,13 +1,14 @@
 # =============================================================================
 # Hermes Agent + Ollama — 100% local, con Docker
-# Funciona en Windows, macOS y Linux.
+# Funciona en Windows, macOS y Linux. Sin cuenta, sin nube: la inferencia
+# corre entera en tu máquina vía Ollama.
 #
 # Arranque (paso a paso en README.md):
 #     cp .env.example .env
 #     docker compose --profile bundled up -d ollama        (+ -f docker-compose.gpu.yml si hay GPU NVIDIA)
 #     docker compose --profile bundled run --rm pull-model
 #     docker compose build hermes
-#     docker compose run --rm --service-ports hermes "hermes setup --portal"
+#     docker compose run --rm hermes "hermes model"        (configurás Ollama local — SIN cuenta)
 #     docker compose run --rm hermes
 #
 # Dos modos de funcionamiento:
@@ -32,6 +33,12 @@ services:
       - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-24h}
       - OLLAMA_NUM_PARALLEL=${OLLAMA_NUM_PARALLEL:-1}
       - OLLAMA_MAX_LOADED_MODELS=${OLLAMA_MAX_LOADED_MODELS:-1}
+      # Hermes necesita más contexto que el default de Ollama (4096, que le queda
+      # chico). Lo servimos desde el SERVIDOR Ollama (no se puede por la API).
+      # 32768 entra holgado en el contexto nativo de qwen3 (~40960 es su techo) y
+      # es razonable en RAM. OJO: más contexto = más RAM; si andás justo de
+      # memoria, bajalo en .env (ej. 8192 o 16384). Ver README.
+      - OLLAMA_CONTEXT_LENGTH=${OLLAMA_CONTEXT_LENGTH:-32768}
     # Puerto de Ollama expuesto al host SOLO para debug. Comentado por defecto:
     # si ya tenés Ollama nativo escuchando en 127.0.0.1:11434 (autostart en Windows /
     # servicio systemd en Linux) este publish chocaría con
@@ -71,9 +78,9 @@ services:
 
   # ---------------------------------------------------------------------------
   # hermes — el agente. Apunta al endpoint OpenAI-compatible de Ollama.
-  # Login (1ra vez):  docker compose run --rm --service-ports hermes "hermes setup --portal"
-  # Elegir modelo:    docker compose run --rm hermes "hermes model"
-  # Chatear:          docker compose run --rm hermes
+  # Configurar modelo local (1ra vez):  docker compose run --rm hermes "hermes model"
+  #     -> elegí "Custom endpoint" y pegá la URL de Ollama (ver README). SIN cuenta.
+  # Chatear:                             docker compose run --rm hermes
   # ---------------------------------------------------------------------------
   hermes:
     build:
@@ -87,13 +94,19 @@ services:
       - OPENAI_BASE_URL=${OPENAI_BASE_URL:-http://ollama:11434/v1}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-ollama}
       - HERMES_HOME=/hermes-config
+      # Solo un default informativo: el modelo real lo fija el Paso 3 ("hermes
+      # model" -> Custom endpoint). Deriva de OLLAMA_MODEL del .env.
       - HERMES_MODEL=${OLLAMA_MODEL:-qwen3:8b}
-      - HERMES_OAUTH_PORT=${HERMES_OAUTH_PORT:-8080}
-    ports:
-      - "127.0.0.1:${HERMES_OAUTH_PORT:-8080}:8080"
     extra_hosts:
       # Permite alcanzar Ollama nativo del host (modo "host" en macOS/Linux).
       - "host.docker.internal:host-gateway"
+    # El flujo por defecto es 100% local y NO necesita publicar ningún puerto.
+    # Solo si querés usar el portal de Nous (OPCIONAL, requiere cuenta:
+    # "hermes setup --portal") hace falta exponer el callback OAuth. En ese caso
+    # descomentá estas dos líneas y agregá HERMES_OAUTH_PORT=8080 en .env, y
+    # corré el setup con --service-ports:
+    # ports:
+    #   - "127.0.0.1:${HERMES_OAUTH_PORT:-8080}:8080"
     volumes:
       - hermes-config:/hermes-config
       # Descomentar para darle a Hermes acceso a una carpeta del host:

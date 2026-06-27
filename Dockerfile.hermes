@@ -21,12 +21,19 @@ ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 
-# Instalar Hermes como root para que el binario quede en /usr/local/bin
-RUN curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+# Instalar Hermes como root para que el binario quede en /usr/local/bin.
+# --skip-browser: este repo es solo-chat en terminal y NO usa automatización de
+# navegador. Saltear Playwright/Chromium hace el build mucho más rápido, liviano
+# y robusto (esa descarga de cientos de MB es un punto de cuelgue conocido).
+RUN curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --skip-browser
 
 # HERMES_HOME apunta al volumen persistente (sobreescrito en docker-compose.yml)
 ENV HERMES_HOME=/hermes-config
 ENV PATH="/root/.hermes/bin:/usr/local/bin:${PATH}"
+
+# Verificar que el binario quedó instalado: si el instalador externo falla,
+# que el BUILD corte acá con un error claro, no el chat después.
+RUN command -v hermes >/dev/null 2>&1 || { echo "ERROR: no se instaló el comando 'hermes' (¿falló el instalador de Nous Research?)"; exit 1; }
 
 RUN mkdir -p /workspace
 

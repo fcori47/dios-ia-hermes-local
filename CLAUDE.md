@@ -6,11 +6,11 @@ La guía operativa para agentes de este repo es **[AGENTS.md](./AGENTS.md)** —
 
 - **Objetivo:** dejar a **Hermes + Ollama corriendo 100% local** y el **chat abierto** en la terminal del usuario. Eso es lo único que entrega este repo.
 - **Vos (el agente) hacés la preparación:** chequear que Docker corra (`docker info`), clonar el repo si falta, leer/editar `.env` (ej. cambiar `OLLAMA_MODEL`), montar el workspace y, sobre todo, **leer los errores que te pegue el humano y diagnosticar**.
-- **Tres cosas las hace EL HUMANO en su terminal visible, no vos:**
+- **Flujo 100% local, SIN cuenta:** este repo conecta Hermes a Ollama con `hermes model` → **"Custom endpoint"** → la URL de Ollama. NO usa el portal de Nous (`hermes setup --portal`) ni ningún login OAuth. No lo sugieras salvo que el usuario lo pida (es opcional y manda la inferencia a la nube).
+- **Dos cosas las hace EL HUMANO en su terminal visible, no vos:**
   1. Instalar **Docker Desktop** y (en Mac) la app de **Ollama** — son instaladores gráficos.
-  2. El **inicio de sesión (OAuth)** en el navegador con la cuenta de Nous Research.
-  3. El **asistente interactivo** (apretar ENTER + elegir el modelo con las flechas).
-- El **login** (`docker compose run --rm --service-ports hermes "hermes setup --portal"`), el **selector de modelo** (`hermes model`) y el **chat** (`docker compose run --rm hermes`) **son interactivos** → los corre el humano en su terminal, no vos en un shell capturado. Vos hacés la preparación no interactiva (levantar Ollama, bajar el modelo, `docker compose build hermes`, tocar `.env`) y destrabás.
+  2. El **asistente interactivo** del Paso 3 (`hermes model`: elegir "Custom endpoint", pegar la URL, elegir el modelo con las flechas) y el **chat**.
+- El **selector de modelo** (`docker compose run --rm hermes "hermes model"`) y el **chat** (`docker compose run --rm hermes`) **son interactivos** → los corre el humano en su terminal, no vos en un shell capturado. Vos hacés la preparación no interactiva (levantar Ollama, bajar el modelo, `docker compose build hermes`, tocar `.env`) y destrabás.
 
 ## Honestidad (regla dura)
 

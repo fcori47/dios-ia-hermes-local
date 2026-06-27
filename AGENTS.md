@@ -52,17 +52,17 @@ Cuando llegues a una de estas, **pará, explicá qué falta y pedile al humano q
    - Docker Desktop → https://www.docker.com/products/docker-desktop/
    - Ollama (Mac) → https://ollama.com/download/mac
 
-2. **El login (OAuth):** `docker compose run --rm --service-ports hermes "hermes setup --portal"`. Hermes muestra una URL; el humano tiene que **abrirla en su navegador, iniciar sesión en Nous Research y autorizar**. Es interactivo y online → del humano.
-
-3. **El selector de modelo y el chat:** `docker compose run --rm hermes "hermes model"` (elegir con flechas + ENTER) y `docker compose run --rm hermes` (chat). Son interfaces interactivas en la terminal (TUI) → las corre el humano.
+2. **Configurar el modelo local y chatear (TUI interactivos):** `docker compose run --rm hermes "hermes model"` (elegir **"Custom endpoint"**, pegar la URL de Ollama, elegir el modelo — todo con flechas + ENTER) y `docker compose run --rm hermes` (chat). Son interfaces interactivas en la terminal → las corre el humano. **NO hay login ni cuenta:** el flujo es 100% local; Hermes apunta directo a Ollama.
 
 ### ⚠️ Lo más importante de todo
 
-Los comandos **`hermes setup --portal`, `hermes model` y `hermes chat`** (los `docker compose run --rm hermes ...`) son **INTERACTIVOS**: esperan ENTER, muestran la URL del OAuth, abren el selector con flechas y arrancan el chat.
+Los comandos **`hermes model` y `hermes chat`** (los `docker compose run --rm hermes ...`) son **INTERACTIVOS**: esperan ENTER, abren el selector con flechas y arrancan el chat.
 
-Si vos los corrés en un shell **capturado / sin terminal real** (como el Bash tool típico de un agente), esas partes **no funcionan**: no vas a poder apretar ENTER, ver la URL, mover las flechas ni chatear.
+Si vos los corrés en un shell **capturado / sin terminal real** (como el Bash tool típico de un agente), esas partes **no funcionan**: no vas a poder apretar ENTER, mover las flechas ni chatear.
 
 👉 **Por eso esos `docker compose run --rm hermes ...` los corre EL HUMANO en su terminal visible.** Vos hacés la preparación (chequeos, clonar, tocar `.env`, levantar Ollama, bajar el modelo, `build`), le explicás qué va a pasar, y te quedás al lado para **leer los errores que te pegue y diagnosticar**.
+
+> 🔒 **Flujo 100% local (importante):** este repo NO usa el portal de Nous (`hermes setup --portal`) ni ningún login. En el Paso 3, el modelo se conecta con `hermes model` → **"Custom endpoint"** → la URL de Ollama (`http://ollama:11434/v1`, o `http://host.docker.internal:11434/v1` en Mac) → API key vacía. Sin cuenta, sin OAuth, sin puertos publicados. No le sugieras al usuario `--portal` salvo que lo pida explícitamente (es opcional y manda la inferencia a la nube de Nous).
 
 ---
 
@@ -94,14 +94,14 @@ Cada paso marca quién lo hace: **[AGENTE]** lo corrés vos · **[HUMANO]** se l
   ```
 - **[AGENTE] macOS:** pedí al humano que tenga Ollama abierto, y corré `docker compose build hermes`. El modelo lo baja el humano con `ollama pull qwen3:8b` (Ollama es nativo).
 
-### Paso 3 — Login + elegir modelo  → **lo corre el HUMANO** (interactivo)
-- **[AGENTE]** Explicale antes: el login abre una URL que tiene que autorizar en el navegador (Nous Research); después un selector de modelo con flechas.
+### Paso 3 — Conectar el modelo local  → **lo corre el HUMANO** (interactivo, SIN cuenta)
+- **[AGENTE]** Explicale antes: se abre un asistente con flechas; tiene que elegir **"Custom endpoint"**, pegar la URL de Ollama, dejar la API key vacía y elegir el modelo. No hay login ni cuenta.
 - **[HUMANO]** en su terminal visible:
   ```bash
-  docker compose run --rm --service-ports hermes "hermes setup --portal"   # login (autoriza en el navegador)
-  docker compose run --rm hermes "hermes model"                            # elegir el modelo (flechas + ENTER)
+  docker compose run --rm hermes "hermes model"
   ```
-- **[AGENTE]** Si da `port is already allocated` (8080 ocupado): editá `.env` → `HERMES_OAUTH_PORT=8081` y que reintente el login. Si falla otra cosa, pedí el error y diagnosticá.
+  En el asistente: **"Custom endpoint"** → URL `http://ollama:11434/v1` (Windows/Linux) o `http://host.docker.internal:11434/v1` (Mac) → API key **vacía** (ENTER) → elegí `qwen3:8b`.
+- **[AGENTE]** Si no aparece "Custom endpoint", suele estar dentro de "More providers…". Si falla algo, pedí el error textual y diagnosticá.
 
 ### Paso 4 — Chatear  → **lo corre el HUMANO** (interactivo)
 - **[HUMANO]:**
@@ -123,7 +123,7 @@ Cada paso marca quién lo hace: **[AGENTE]** lo corrés vos · **[HUMANO]** se l
 
 ## 🆘 Si algo falla
 
-1. **[AGENTE]** Pedí el **error textual** y leelo. La mayoría: Docker apagado (`docker info` falla), puerto 8080 ocupado (`HERMES_OAUTH_PORT=8081`), Ollama nativo no escuchando en Mac, o el modelo todavía bajando.
+1. **[AGENTE]** Pedí el **error textual** y leelo. La mayoría: Docker apagado (`docker info` falla), Ollama nativo no escuchando en Mac (`launchctl setenv OLLAMA_HOST 0.0.0.0:11434` + reabrir la app), el modelo todavía bajando, o que en `hermes model` no encuentre "Custom endpoint" (está dentro de "More providers…").
 2. Mandalo a **[Problemas comunes](./README.md#-problemas-comunes)** del README.
 3. Si nada alcanza, que **abra un issue**: https://github.com/fcori47/dios-ia-hermes-local/issues — con su SO, el comando y el error completo.
 
